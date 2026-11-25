@@ -13,7 +13,11 @@ from .quotes import date_label, local_datetime, money, number_input, quantity_te
 
 def create_app(config=None):
     app = Flask(__name__)
-    db_url = os.getenv("VENNA_DATABASE_URL", "sqlite:///instance/venna.sqlite3")
+    db_url = (
+        os.getenv("VENNA_DATABASE_URL")
+        or os.getenv("DATABASE_URL")
+        or "sqlite:///instance/venna.sqlite3"
+    )
     if db_url.startswith("postgresql://"):
         db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
     elif db_url.startswith("postgres://"):
