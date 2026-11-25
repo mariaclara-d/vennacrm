@@ -13,9 +13,14 @@ from .quotes import date_label, local_datetime, money, number_input, quantity_te
 
 def create_app(config=None):
     app = Flask(__name__)
+    db_url = os.getenv("VENNA_DATABASE_URL", "sqlite:///instance/venna.sqlite3")
+    if db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    elif db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
     app.config.update(
         SECRET_KEY=os.getenv("VENNA_SECRET_KEY"),
-        DATABASE_URL=os.getenv("VENNA_DATABASE_URL", "sqlite:///instance/venna.sqlite3"),
+        DATABASE_URL=db_url,
         SESSION_COOKIE_NAME="venna_session",
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SECURE=os.getenv("VENNA_LOCAL_HTTP") != "1",
