@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Financeiro{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='financeiro.js') }}"></script>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><p class="eyebrow">Gestão financeira</p><h1>Financeiro</h1></div>
+</div>
+
+<div class="fin-layout">
+  <aside class="panel fin-config">
+    <p class="eyebrow">Configurar cálculo</p>
+    <h2>Parâmetros</h2>
+    <div class="stack" style="margin-top:14px">
+      <div class="fin-mode-toggle">
+        <label class="fin-mode-label">Modo de cálculo</label>
+        <div class="fin-mode-btns">
+          <button class="fin-mode-btn active" data-mode="commission">Comissão</button>
+          <button class="fin-mode-btn" data-mode="split">Divisão</button>
+        </div>
+      </div>
+
+      <div id="mode-commission">
+        <label>Comissão (%)
+          <input type="number" id="commission-pct" min="0" max="100" step="0.1" value="5" inputmode="decimal">
+        </label>
+      </div>
+
+      <div id="mode-split" hidden>
+        <label class="fin-mode-label">Dividir entre</label>
+        <div class="fin-mode-btns">
+          <button class="fin-split-btn active" data-parts="2">2 pessoas</button>
+          <button class="fin-split-btn" data-parts="3">3 pessoas</button>
+        </div>
+        <div id="split-names" style="margin-top:10px;display:grid;gap:8px">
+          <label>Pessoa 1 <input type="text" class="split-name" placeholder="Nome" maxlength="50"></label>
+          <label>Pessoa 2 <input type="text" class="split-name" placeholder="Nome" maxlength="50"></label>
+          <label id="split-name-3" hidden>Pessoa 3 <input type="text" class="split-name" placeholder="Nome" maxlength="50"></label>
+        </div>
+      </div>
+
+      <label>Taxa de cartão (%) <small class="muted">— opcional</small>
+        <input type="number" id="card-fee" min="0" max="100" step="0.01" value="" inputmode="decimal" placeholder="0,00">
+      </label>
+
+      <label>Filtrar por status
+        <select id="filter-status">
+          <option value="all">Todos</option>
+          <option value="accepted">Aceitos</option>
+          <option value="sent">Pendentes</option>
+          <option value="declined">Recusados</option>
+        </select>
+      </label>
+    </div>
+  </aside>
+
+  <div class="fin-main">
+    <section class="panel" style="margin-bottom:14px">
+      <p class="eyebrow">Resumo</p>
+      <h2>Totais</h2>
+      <div class="fin-summary-grid" style="margin-top:14px">
+        <div class="fin-summary-card fin-accepted">
+          <span>Aceitos / Fechados</span>
+          <strong id="total-accepted">—</strong>
+        </div>
+        <div class="fin-summary-card fin-sent">
+          <span>Pendentes</span>
+          <strong id="total-sent">—</strong>
+        </div>
+        <div class="fin-summary-card fin-declined">
+          <span>Recusados</span>
+          <strong id="total-declined">—</strong>
+        </div>
+        <div class="fin-summary-card fin-net">
+          <span id="net-label">Valor líquido (aceitos)</span>
+          <strong id="total-net">—</strong>
+        </div>
+      </div>
+      <div class="fin-result" id="fin-result" style="margin-top:16px"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Orçamentos</h2>
+      <div class="table-wrap">
+        <table id="fin-table">
+          <thead>
+            <tr>
+              <th>Orçamento</th>
+              <th>Cliente</th>
+              <th>Status</th>
+              <th>Valor bruto</th>
+              <th>Taxa cartão</th>
+              <th id="calc-col-header">Comissão</th>
+              <th>Valor líquido</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for quote, lead, revision in rows %}
+            {% set effective_status = 'accepted' if lead.stage == 'won' else quote.status %}
+            <tr data-status="{{ effective_status }}" data-total="{{ revision.data.total }}">
+              <td><a href="{{ url_for('crm.quote_detail', quote_id=quote.id) }}">{{ quote|quote_number }}</a></td>
+              <td>{{ lead.name }}</td>
+              <td><span class="tag {{ effective_status }}">{{ 'Fechado' if lead.stage == 'won' else quote_states[quote.status] }}</span></td>
+              <td class="col-gross">{{ revision.data.total|money }}</td>
+              <td class="col-card-fee">—</td>
+              <td class="col-calc">—</td>
+              <td class="col-net">—</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if not rows %}
+      <div class="empty"><strong>Nenhum orçamento aceito, pendente ou recusado ainda.</strong></div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#292123">
+  <title>{% block title %}CRM{% endblock %} | VENNA</title>
+  <link rel="icon" href="{{ url_for('static', filename='venna.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='crm.css') }}">
+  {% block scripts %}{% endblock %}
+</head>
+<body class="{% if g.user %}has-sidebar{% endif %}">
+{% if g.user %}
+<aside class="sidebar" aria-label="Menu principal">
+  <a class="sidebar-brand" href="{{ url_for('crm.dashboard') }}"><span>VENNA</span><small>Mármores e Revestimentos</small></a>
+  <nav class="sidebar-nav" aria-label="Navegação principal">
+    <a href="{{ url_for('crm.dashboard') }}" {% if request.endpoint == 'crm.dashboard' %}aria-current="page"{% endif %}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Leads
+    </a>
+    <a href="{{ url_for('crm.kanban') }}" {% if request.endpoint == 'crm.kanban' %}aria-current="page"{% endif %}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+      Kanban
+    </a>
+    <a href="{{ url_for('crm.tasks') }}" {% if request.endpoint in ('crm.tasks','crm.task_create','crm.task_delete') %}aria-current="page"{% endif %}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tarefas
+    </a>
+    <a href="{{ url_for('crm.quotes_list') }}" {% if request.endpoint == 'crm.quotes_list' %}aria-current="page"{% endif %}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Orçamentos
+    </a>
+    <a href="{{ url_for('crm.simulator') }}" {% if request.endpoint == 'crm.simulator' %}aria-current="page"{% endif %}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+      Simulador
+    </a>
+    <a href="{{ url_for('crm.financeiro') }}" {% if request.endpoint == 'crm.financeiro' %}aria-current="page"{% endif %}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Financeiro
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="sidebar-user">{{ g.user.name }}</span>
+    <form action="{{ url_for('auth.logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="plain">Sair</button></form>
+  </div>
+</aside>
+<header class="topbar-mobile">
+  <a class="brand" href="{{ url_for('crm.dashboard') }}"><span>VENNA</span></a>
+  <nav aria-label="Navegação principal">
+    <a href="{{ url_for('crm.dashboard') }}" {% if request.endpoint == 'crm.dashboard' %}aria-current="page"{% endif %}>Leads</a>
+    <a href="{{ url_for('crm.quotes_list') }}" {% if request.endpoint == 'crm.quotes_list' %}aria-current="page"{% endif %}>Orçamentos</a>
+    <a href="{{ url_for('crm.simulator') }}" {% if request.endpoint == 'crm.simulator' %}aria-current="page"{% endif %}>Simulador</a>
+  </nav>
+</header>
+{% else %}
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="{{ url_for('crm.dashboard') }}"><span>VENNA</span><small>Mármores e Revestimentos</small></a>
+    <span class="private">Área privada</span>
+  </div>
+</header>
+{% endif %}
+<main id="principal" class="main {% if g.user %}main-with-sidebar{% endif %}">
+  <div class="main-inner">
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <p class="alert {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </div>
+  <footer class="footer"><span>VENNA · Mármores e Revestimentos</span><span>Área comercial</span></footer>
+</main>
+</body>
+</html>

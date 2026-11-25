@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 310" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="rock" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#231e21"/><stop offset=".48" stop-color="#3d3032"/><stop offset="1" stop-color="#1b171a"/>
+    </linearGradient>
+    <radialGradient id="bloom" cx=".72" cy=".15" r=".73">
+      <stop stop-color="#695355" stop-opacity=".72"/><stop offset="1" stop-color="#31252a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vein" x1="0" x2="1" y1="1" y2="0">
+      <stop stop-color="#62484a"/><stop offset=".41" stop-color="#d0ad91"/><stop offset=".73" stop-color="#947374"/><stop offset="1" stop-color="#d4bbac"/>
+    </linearGradient>
+    <filter id="rough" x="-.2" y="-.5" width="1.4" height="2" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".012 .041" numOctaves="4" seed="17" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="34" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="grain" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".47" numOctaves="3" seed="31"/>
+    </filter>
+  </defs>
+  <path fill="url(#rock)" d="M0 0h880v310H0z"/>
+  <path fill="url(#bloom)" d="M0 0h880v310H0z"/>
+  <g fill="none" filter="url(#rough)" transform="translate(-24 1)">
+    <path d="M224 343c66-51 140-57 211-94 78-40 73-59 146-91 47-21 123-20 159-60 33-36 72-61 153-92" stroke="#916e6b" stroke-width="26" opacity=".19"/>
+    <path d="M211 342c66-51 153-56 224-93 78-40 73-59 146-91 47-21 123-20 159-60 33-36 72-61 153-92" stroke="url(#vein)" stroke-width="8" opacity=".26"/>
+    <path d="M200 351c66-51 164-65 235-102 78-40 73-59 146-91 47-21 123-20 159-60 33-36 72-61 153-92" stroke="url(#vein)" stroke-width="2.1" opacity=".9"/>
+    <path d="M186 351c66-51 153-64 224-101 78-40 90-59 163-91 47-21 121-29 157-69 33-36 72-64 153-95" stroke="#d5b49f" stroke-width=".8" opacity=".74"/>
+    <path d="M286 336c60-38 127-48 178-73 39-20 62-51 102-64s96-8 139-39c42-30 65-65 104-75" stroke="#b99b88" stroke-width="1.5" opacity=".53"/>
+    <path d="M358 337c48-33 114-34 163-69 62-44 119-24 172-48 43-19 61-53 108-62 48-9 69-18 103-56" stroke="#846361" stroke-width="9" opacity=".2"/>
+    <path d="M365 345c48-33 114-34 163-69 62-44 119-24 172-48 43-19 61-53 108-62 48-9 69-18 103-56" stroke="#bf9d88" stroke-width="1.1" opacity=".54"/>
+    <path d="M329 257c50-31 125-51 155-85 23-25 44-45 93-52 66-9 98-30 138-66 25-22 64-40 104-68" stroke="#a17d77" stroke-width="6" opacity=".23"/>
+    <path d="M322 251c50-31 125-51 155-85 23-25 44-45 93-52 66-9 98-30 138-66 25-22 64-40 104-68" stroke="#b89586" stroke-width="1.2" opacity=".59"/>
+    <path d="M541 178c6-42-8-66 18-106 24-37 61-41 84-82M744 241c48-37 80-13 158-54M663 333c54-36 85-27 126-49 34-18 59-33 118-32M520 102c-9-29 11-56 50-89" stroke="#ad8a79" stroke-width="1" opacity=".37"/>
+    <path d="M429 332c29-15 60-34 83-55 27-25 50-23 65-44m30-10c32-6 62-7 85-19m58-70c38-22 95-20 153-72M608 117c47-22 37-38 55-65 11-15 41-25 53-44" stroke="#e3bd9d" stroke-width=".7" opacity=".62"/>
+  </g>
+  <path d="M0 0h880v310H0z" opacity=".105" filter="url(#grain)" style="mix-blend-mode:soft-light"/>
+</svg>

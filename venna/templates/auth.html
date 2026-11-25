@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Entrar' if mode == 'login' else 'Definir senha' }}{% endblock %}
+{% block scripts %}{% if mode == 'activate' %}<script defer src="{{ url_for('static', filename='activate.js') }}"></script>{% endif %}{% endblock %}
+{% block content %}
+<div class="login-layout">
+  <div class="hero login-hero">
+    <p class="eyebrow">Área comercial</p>
+    <h1>CRM VENNA</h1>
+    <p>Leads, simulações e propostas comerciais em um só lugar.</p>
+  </div>
+  <section class="panel login-panel">
+    {% if mode == 'login' %}
+    <h2>Acesse sua conta</h2>
+    <p class="muted">Entre com seu e-mail e sua senha da VENNA.</p>
+    <form method="post" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>E-mail <input type="email" name="email" autocomplete="username" maxlength="254" required></label>
+      <label>Senha <input type="password" name="password" autocomplete="current-password" maxlength="256" required></label>
+      <button type="submit" class="btn primary">Entrar no CRM</button>
+    </form>
+    {% else %}
+    <h2>Defina sua senha</h2>
+    <p class="muted">Use o seu convite individual para ativar o acesso. A senha precisa ter pelo menos 15 caracteres.</p>
+    <form method="post" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label id="token-field">Código do convite <input name="token" id="invitation-token" value="{{ request.form.get('token', '') }}" autocomplete="off" maxlength="43" required></label>
+      <label>Nova senha <input type="password" name="password" autocomplete="new-password" minlength="15" maxlength="256" required></label>
+      <label>Confirme a senha <input type="password" name="confirmation" autocomplete="new-password" minlength="15" maxlength="256" required></label>
+      <button type="submit" class="btn primary">Salvar minha senha</button>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

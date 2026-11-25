@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Leads{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Área comercial</p>
+    <h1>Carteira de leads</h1>
+  </div>
+  <a class="btn light" href="{{ url_for('crm.edit_lead') }}">+ Novo lead</a>
+</div>
+<section class="metrics" aria-label="Indicadores">
+  <a class="metric" href="{{ url_for('crm.dashboard') }}">
+    <div class="metric-icon metric-icon--neutral">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <span>Leads cadastrados</span>
+    <strong>{{ counts.values() | sum }}</strong>
+  </a>
+  <a class="metric" href="{{ url_for('crm.quotes_list', status='sent') }}">
+    <div class="metric-icon metric-icon--amber">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </div>
+    <span>Aguardando resposta</span>
+    <strong>{{ quote_count }}</strong>
+  </a>
+  <a class="metric" href="{{ url_for('crm.dashboard', retornos=1) }}">
+    <div class="metric-icon metric-icon--red">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <span>Retornos até hoje</span>
+    <strong>{{ due_count }}</strong>
+  </a>
+</section>
+<section class="panel">
+  <div class="section-head"><div><p class="eyebrow">Funil comercial</p><h2>Carteira de leads</h2></div></div>
+  <nav class="stages" aria-label="Filtrar por etapa">
+    <a class="pill {% if not stage and not due_only %}selected{% endif %}" href="{{ url_for('crm.dashboard', q=q) }}">Todos</a>
+    {% for key, label in stages.items() %}
+      <a class="pill {% if key == stage %}selected{% endif %}" href="{{ url_for('crm.dashboard', stage=key, q=q) }}">{{ label }} <small>{{ counts.get(key, 0) }}</small></a>
+    {% endfor %}
+    {% if due_only %}<a class="pill selected" href="{{ url_for('crm.dashboard', retornos=1, q=q) }}">Retornos até hoje</a>{% endif %}
+  </nav>
+  <form class="filter" method="get">
+    {% if stage %}<input type="hidden" name="stage" value="{{ stage }}">{% endif %}
+    {% if due_only %}<input type="hidden" name="retornos" value="1">{% endif %}
+    <label>Buscar lead <input type="search" name="q" value="{{ q }}" maxlength="100" placeholder="Nome, telefone, e-mail ou cidade"></label>
+    <button type="submit" class="btn">Buscar</button>
+  </form>
+  {% if leads %}
+    <div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Etapa</th><th>Origem</th><th>Responsável</th><th>Próximo retorno</th></tr></thead><tbody>
+      {% for lead, assignee in leads %}<tr>
+        <td><a href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}"><strong>{{ lead.name }}</strong></a><small>{{ lead.city }}</small></td>
+        <td><span class="tag {{ lead.stage }}">{{ stages[lead.stage] }}</span></td><td>{{ lead.source }}</td>
+        <td>{{ assignee or '—' }}</td>
+        <td {% if lead.followup and lead.followup <= today and lead.stage not in ('won', 'lost') %}class="overdue"{% endif %}>{{ lead.followup.strftime('%d/%m/%Y') if lead.followup else '—' }}</td>
+      </tr>{% endfor %}
+    </tbody></table></div>
+  {% else %}
+    <div class="empty"><strong>Nenhum lead nesta visualização</strong><p>Cadastre um novo contato ou ajuste a busca.</p></div>
+  {% endif %}
+  {% if has_more or page > 1 %}<div class="actions">
+    {% if page > 1 %}<a class="btn" href="{{ url_for('crm.dashboard', q=q, stage=stage, retornos=1 if due_only else 0, page=page-1) }}">Anterior</a>{% endif %}
+    {% if has_more %}<a class="btn" href="{{ url_for('crm.dashboard', q=q, stage=stage, retornos=1 if due_only else 0, page=page+1) }}">Próxima</a>{% endif %}
+  </div>{% endif %}
+</section>
+{% endblock %}

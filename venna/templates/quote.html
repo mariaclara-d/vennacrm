@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ quote|quote_number }}{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='quote.js') }}"></script>{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}">← Ficha do lead</a>
+<section class="hero hero-split">
+  <div><p class="eyebrow">Proposta comercial · Revisão {{ version.number }}</p><h1>{{ quote|quote_number }}</h1><p>{{ version.data.customer.name }} · {{ quote_states[quote.status] }}</p></div>
+  <div class="hero-actions">
+    <button type="button" class="btn" id="copy-whatsapp"
+      data-quote="{{ quote|quote_number }}"
+      data-customer="{{ version.data.customer.name }}"
+      data-city="{{ version.data.customer.city or '' }}"
+      data-items='{{ version.data["items"] | tojson }}'
+      data-subtotal="{{ version.data.subtotal }}"
+      data-freight="{{ version.data.freight if version.data.freight is not none else '' }}"
+      data-total="{{ version.data.total }}"
+      data-valid="{{ version.data.valid_until|brdate }}"
+      data-payment="{{ version.data.payment or '' }}"
+      data-delivery="{{ version.data.delivery or '' }}"
+      aria-label="Copiar resumo para WhatsApp">Copiar para WhatsApp</button>
+    <a class="btn light" href="{{ url_for('crm.download_pdf', quote_id=quote.id, number=version.number) }}">Baixar PDF</a>
+  </div>
+</section>
+<div class="quote-layout">
+  <section class="panel">
+    <div class="section-head"><h2>Itens da proposta</h2>
+      <a class="btn" href="{{ url_for('crm.edit_quote', quote_id=quote.id) }}">Criar revisão</a>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Produto ou serviço</th><th>Quantidade</th><th>Valor unitário</th><th>Valor do item</th></tr></thead>
+      <tbody>{% for item in version.data['items'] %}<tr><td>{{ item.description }}</td><td>{{ item.quantity|quantity }} {{ item.unit }}</td><td>{{ item.rate|money }}</td><td>{{ item.total|money }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <div class="details">
+      <div><strong>Emissão</strong><p>{{ (version.issued_at|local).strftime('%d/%m/%Y') }}</p></div>
+      <div><strong>Validade</strong><p>{{ version.data.valid_until|brdate }}</p></div>
+      <div><strong>Prazo de entrega</strong><p>{{ version.data.delivery or '—' }}</p></div>
+      <div><strong>Pagamento</strong><p>{{ version.data.payment or '—' }}</p></div>
+      {% if version.data.unloading %}<div><strong>Descarregamento</strong><p>{{ version.data.unloading }}</p></div>{% endif %}
+      {% if version.data.remarks %}<div><strong>Observações</strong><p>{{ version.data.remarks }}</p></div>{% endif %}
+    </div>
+  </section>
+  <aside class="panel summary">
+    <p class="eyebrow">Revisão {{ version.number }}</p><h2>Resumo</h2>
+    <dl class="summary-lines"><div><dt>Subtotal</dt><dd>{{ version.data.subtotal|money }}</dd></div>
+      <div><dt>Frete</dt><dd>{{ version.data.freight|money if version.data.freight is not none else 'A confirmar' }}</dd></div></dl>
+    <div class="total"><span>{{ 'Total sem frete' if version.data.freight is none else 'Valor total' }}</span><strong>{{ version.data.total|money }}</strong></div>
+    {% if transitions %}<form method="post" action="{{ url_for('crm.quote_status', quote_id=quote.id) }}" class="actions">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="revision" value="{{ version.number }}"><input type="hidden" name="old_status" value="{{ quote.status }}">
+      {% for status in transitions %}<button type="submit" name="status" value="{{ status }}" class="btn light">{{ 'Registrar envio' if status == 'sent' else 'Marcar como ' ~ quote_states[status]|lower }}</button>{% endfor %}
+    </form>{% endif %}
+  </aside>
+</div>
+<section class="panel">
+  <h2>Histórico de revisões</h2>
+  <div class="table-wrap"><table><thead><tr><th>Revisão</th><th>Emissão</th><th>Responsável</th><th>Valor</th><th>Arquivo</th></tr></thead>
+  <tbody>{% for item, name in revisions %}<tr><td>{{ item.number }}{% if item.number == version.number %} · Atual{% endif %}</td>
+    <td>{{ (item.issued_at|local).strftime('%d/%m/%Y às %H:%M') }}</td><td>{{ name }}</td><td>{{ item.data.total|money }}</td>
+    <td><a href="{{ url_for('crm.download_pdf', quote_id=quote.id, number=item.number) }}">PDF da revisão {{ item.number }}</a></td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endblock %}

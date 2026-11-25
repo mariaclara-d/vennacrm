@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar lead' if lead else 'Novo lead' }}{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='cidades.js') }}"></script>{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('crm.lead_detail', lead_id=lead.id) if lead else url_for('crm.dashboard') }}">← {{ 'Ficha do lead' if lead else 'Leads' }}</a>
+<section class="panel narrow">
+  <p class="eyebrow">Cadastro comercial</p><h1>{{ 'Editar lead' if lead else 'Novo lead' }}</h1>
+  <form method="post" class="stack form-content">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if lead %}<input type="hidden" name="version" value="{{ request.form.get('version', lead.version) }}">{% endif %}
+    <div class="fields">
+      <label>Nome ou empresa <input name="name" value="{{ values.get('name', '') }}" maxlength="100" required></label>
+      <label>Telefone ou WhatsApp <input name="phone" type="tel" value="{{ values.get('phone', '') }}" maxlength="36"></label>
+      <label>E-mail <input name="email" type="email" value="{{ values.get('email', '') }}" maxlength="254"></label>
+      <label>Cidade/UF <input name="city" value="{{ values.get('city', '') }}" maxlength="100" placeholder="Ex.: Salvador/BA" list="cidades-br" autocomplete="off"></label>
+      <label>CPF/CNPJ <input name="document" value="{{ values.get('document', '') }}" maxlength="30" placeholder="Opcional"></label>
+      <label>Origem <select name="source">{% for source in sources %}<option {% if values.get('source') == source %}selected{% endif %}>{{ source }}</option>{% endfor %}</select></label>
+      <label>Etapa <select name="stage">{% for key, label in stages.items() %}<option value="{{ key }}" {% if values.get('stage') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>Responsável <select name="assignee_id"><option value="">Sem responsável</option>
+        {% for person in users %}<option value="{{ person.id }}" {% if values.get('assignee_id')|string == person.id|string %}selected{% endif %}>{{ person.name }}</option>{% endfor %}
+      </select></label>
+      <label>Próximo retorno <input type="date" name="followup" value="{{ values.get('followup', '') }}"></label>
+    </div>
+    <label>Notas internas <textarea name="notes" maxlength="2000" rows="4">{{ values.get('notes', '') }}</textarea></label>
+    <div class="actions">
+      <button type="submit" class="btn primary">Salvar lead</button>
+    </div>
+  </form>
+  {% if lead %}
+  <form method="post" action="{{ url_for('crm.delete_lead', lead_id=lead.id) }}" onsubmit="return confirm('Apagar este lead permanentemente?')" style="margin-top:12px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-danger">Apagar lead</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

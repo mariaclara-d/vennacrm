@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Kanban{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='kanban.js') }}"></script>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><p class="eyebrow">Funil comercial</p><h1>Kanban de leads</h1></div>
+  <a class="btn light" href="{{ url_for('crm.edit_lead') }}">+ Novo lead</a>
+</div>
+<div class="kanban-board" id="kanban-board">
+  {% for key, label in stages.items() %}
+  <div class="kanban-col" data-stage="{{ key }}">
+    <div class="kanban-col-header">
+      <span class="kanban-col-title">{{ label }}</span>
+      <span class="kanban-col-count">{{ by_stage[key]|length }}</span>
+    </div>
+    <div class="kanban-cards" data-stage="{{ key }}">
+      {% for lead, assignee in by_stage[key] %}
+      <div class="kanban-card" data-lead-id="{{ lead.id }}" draggable="true">
+        <a href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}" class="kanban-card-name">{{ lead.name }}</a>
+        {% if lead.city %}<p class="kanban-card-city">{{ lead.city }}</p>{% endif %}
+        {% if assignee %}<p class="kanban-card-assignee">{{ assignee }}</p>{% endif %}
+        {% if lead.followup %}<p class="kanban-card-followup {% if lead.followup <= today and key not in ('won','lost') %}overdue{% endif %}">{{ lead.followup.strftime('%d/%m/%Y') }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<input type="hidden" id="csrf-token" value="{{ csrf_token() }}">
+{% endblock %}

@@ -1,0 +1,7 @@
+Flask==3.1.2
+Flask-WTF==1.2.2
+SQLAlchemy==2.0.44
+tzdata==2026.6
+psycopg[binary]==3.2.13
+reportlab==4.4.9
+gunicorn==23.0.0

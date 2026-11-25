@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Ficha do lead{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('crm.dashboard') }}">← Leads</a>
+<section class="hero hero-split"><div><p class="eyebrow">Ficha do lead</p><h1>{{ lead.name }}</h1><p>{{ stages[lead.stage] }}{% if lead.city %} · {{ lead.city }}{% endif %}</p></div>
+  <a class="btn light" href="{{ url_for('crm.edit_quote', lead_id=lead.id) }}">+ Novo orçamento</a>
+</section>
+<div class="two-col">
+  <section class="panel">
+    <div class="section-head"><h2>Contato</h2>
+      <a class="btn" href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}">Editar lead</a>
+    </div>
+    <dl class="details">
+      <div><dt>Telefone</dt><dd>{{ lead.phone or '—' }}</dd></div><div><dt>E-mail</dt><dd>{{ lead.email or '—' }}</dd></div>
+      <div><dt>CPF/CNPJ</dt><dd>{{ lead.document or '—' }}</dd></div><div><dt>Origem</dt><dd>{{ lead.source }}</dd></div>
+      <div><dt>Responsável</dt><dd>{{ assignee.name if assignee else '—' }}</dd></div>
+      <div><dt>Próximo retorno</dt><dd>{{ lead.followup.strftime('%d/%m/%Y') if lead.followup else '—' }}</dd></div>
+    </dl>
+    {% if lead.notes %}<div class="note"><strong>Notas internas</strong><p>{{ lead.notes }}</p></div>{% endif %}
+  </section>
+  <section class="panel"><h2>Atividade recente</h2><ul class="timeline">
+    {% for event, actor in activity %}<li><strong>{{ actor }}</strong> {{ event.message }}<small>{{ (event.created_at|local).strftime('%d/%m/%Y às %H:%M') }}</small></li>{% endfor %}
+  </ul></section>
+</div>
+<section class="panel"><h2>Orçamentos</h2>
+  {% if quotes %}
+    <div class="table-wrap"><table><thead><tr><th>Orçamento</th><th>Status</th><th>Valor</th><th>Revisão</th></tr></thead><tbody>
+      {% for quote, version in quotes %}<tr><td><a href="{{ url_for('crm.quote_detail', quote_id=quote.id) }}"><strong>{{ quote|quote_number }}</strong></a></td>
+        <td><span class="tag {{ quote.status }}">{{ quote_states[quote.status] }}</span></td>
+        <td>{{ version.data.total|money }}{% if version.data.freight is none %}<small>Sem frete</small>{% endif %}</td><td>{{ version.number }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  {% else %}<div class="empty"><strong>Este lead ainda não tem orçamento.</strong><p>Use o simulador para montar a primeira proposta.</p></div>{% endif %}
+</section>
+{% endblock %}

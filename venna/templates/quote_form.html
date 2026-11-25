@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Simulador' if available_leads is not none else 'Montar orçamento' }}{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='quote.js') }}"></script><script src="{{ url_for('static', filename='cidades.js') }}"></script>{% endblock %}
+{% macro item_row(description='', unit='m²', quantity='', rate='') %}
+  <div class="item" data-item>
+    <label class="description">Produto ou serviço <input name="description" value="{{ description }}" maxlength="150" placeholder="Ex.: Mármore Bege Bahia levigado" required></label>
+    <label>Unidade <select name="unit"><option {% if unit == 'm²' %}selected{% endif %}>m²</option><option {% if unit == 'un' %}selected{% endif %}>un</option></select></label>
+    <label>Quantidade <input name="quantity" value="{{ quantity }}" inputmode="decimal" maxlength="20" placeholder="0,00" required></label>
+    <label>Valor unit. (R$) <input name="rate" value="{{ rate }}" inputmode="decimal" maxlength="20" placeholder="0,00" required></label>
+    <div class="line-value"><span>Valor do item</span><output data-line-total>—</output></div>
+    <button type="button" class="btn icon" data-remove aria-label="Remover item" title="Remover item">×</button>
+  </div>
+{% endmacro %}
+{% block content %}
+<a class="back" href="{{ url_for('crm.quote_detail', quote_id=quote.id) if quote else url_for('crm.lead_detail', lead_id=lead.id) if lead and available_leads is none else url_for('crm.dashboard') }}">← {{ 'Orçamento' if quote else 'Ficha do lead' if lead and available_leads is none else 'Leads' }}</a>
+<section class="hero">
+  <p class="eyebrow">{{ 'Proposta comercial' if available_leads is none else 'Ferramenta interna' }}</p>
+  <h1>{{ 'Revisar orçamento' if quote else 'Simulador de orçamento' }}</h1>
+  <p>{{ (quote|quote_number) ~ ' · ' ~ lead.name if quote else lead.name if lead and available_leads is none else 'Calcule materiais, serviços e frete e salve como proposta.' }}</p>
+</section>
+<form method="post" id="quote-form" class="quote-layout">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if quote %}
+    <input type="hidden" name="revision" value="{{ posted.get('revision') if posted else quote.revision }}">
+    <input type="hidden" name="old_status" value="{{ posted.get('old_status') if posted else quote.status }}">
+  {% endif %}
+  <div class="stack">
+    <section class="panel">
+      <div class="section-head"><div><p class="eyebrow">01 · Itens</p><h2>Produtos e serviços</h2></div></div>
+      <p class="muted">Informe m² para materiais ou unidades para serviços. Use vírgula nas casas decimais.</p>
+      <div id="items">
+        {% if posted and posted.getlist('description') %}
+          {% set descriptions = posted.getlist('description') %}{% set units = posted.getlist('unit') %}{% set quantities = posted.getlist('quantity') %}{% set rates = posted.getlist('rate') %}
+          {% for description in descriptions[:40] %}{{ item_row(description, units[loop.index0]|default('m²'), quantities[loop.index0]|default(''), rates[loop.index0]|default('')) }}{% endfor %}
+        {% elif previous %}
+          {% for item in previous.data['items'] %}{{ item_row(item.description, item.unit, item.quantity|number_input(4), item.rate|number_input(2)) }}{% endfor %}
+        {% else %}{{ item_row() }}{% endif %}
+      </div>
+      <template id="item-template">{{ item_row() }}</template>
+      <button type="button" class="btn" id="add-item">+ Adicionar item</button>
+    </section>
+    <section class="panel">
+      <p class="eyebrow">02 · Condições</p><h2>Dados da proposta</h2>
+      {% set data = previous.data if previous else {} %}
+      <div class="fields form-content">
+        <label>Frete (R$) <input name="freight" inputmode="decimal" value="{{ posted.get('freight', '') if posted else data.freight|number_input(2) if data.get('freight') is not none else '' }}" maxlength="20" placeholder="A confirmar"></label>
+        <label>Validade <input name="valid_until" type="date" min="{{ today }}" value="{{ posted.get('valid_until', '') if posted else data.get('valid_until', '') }}"></label>
+        <label>Prazo de entrega <input name="delivery" value="{{ posted.get('delivery', '') if posted else data.get('delivery', '') }}" maxlength="280" placeholder="Opcional"></label>
+        <label>Telefone comercial <input name="seller_phone" type="tel" value="{{ posted.get('seller_phone', '') if posted else data.get('seller_phone', '') }}" maxlength="36" placeholder="Opcional"></label>
+        <label>Pagamento <textarea name="payment" maxlength="500" rows="3" placeholder="Forma de pagamento, sinal ou parcelas">{{ posted.get('payment', '') if posted else data.get('payment', '') }}</textarea></label>
+        <label>Descarregamento <textarea name="unloading" maxlength="500" rows="3" placeholder="Informe quem realizará a descarga">{{ posted.get('unloading', '') if posted else data.get('unloading', '') }}</textarea></label>
+        <label class="wide">Observações para o cliente <textarea name="remarks" maxlength="800" rows="3">{{ posted.get('remarks', '') if posted else data.get('remarks', '') }}</textarea></label>
+      </div>
+    </section>
+    <section class="panel">
+      <p class="eyebrow">03 · Entrega</p><h2>Endereço de entrega</h2>
+      <div class="fields form-content">
+        <label>CEP <input name="delivery_cep" value="{{ posted.get('delivery_cep', '') if posted else data.get('delivery_cep', '') }}" maxlength="9" placeholder="00000-000"></label>
+        <label>Número <input name="delivery_number" value="{{ posted.get('delivery_number', '') if posted else data.get('delivery_number', '') }}" maxlength="20" placeholder="Ex.: 123"></label>
+        <label class="wide">Logradouro <input name="delivery_street" value="{{ posted.get('delivery_street', '') if posted else data.get('delivery_street', '') }}" maxlength="200" placeholder="Rua, Avenida..."></label>
+        <label>Bairro <input name="delivery_neighborhood" value="{{ posted.get('delivery_neighborhood', '') if posted else data.get('delivery_neighborhood', '') }}" maxlength="100"></label>
+        <label>Cidade/UF <input name="delivery_city" value="{{ posted.get('delivery_city', '') if posted else data.get('delivery_city', '') }}" maxlength="100" list="cidades-br" autocomplete="off"></label>
+      </div>
+    </section>
+      </div>
+    </section>
+  </div>
+  <aside class="panel summary">
+    <p class="eyebrow">Sua estimativa</p><h2>Resumo da cotação</h2>
+    <dl class="summary-lines"><div><dt>Subtotal</dt><dd id="subtotal">—</dd></div><div><dt>Frete</dt><dd id="freight-summary">A confirmar</dd></div></dl>
+    <div class="total"><span id="total-label">Total sem frete</span><output id="total" aria-labelledby="total-label">—</output></div>
+    <p class="hint" id="quote-hint">Preencha a quantidade e o preço para calcular.</p>
+    {% if available_leads is not none %}
+      <label>Vincular ao lead <select name="lead_id" required><option value="">Selecione um lead</option>
+        {% for item in available_leads %}<option value="{{ item.id }}" {% if lead and lead.id == item.id %}selected{% endif %}>{{ item.name }}{% if item.city %} · {{ item.city }}{% endif %}</option>{% endfor %}
+      </select></label>
+      {% if not available_leads %}<p class="hint"><a href="{{ url_for('crm.edit_lead') }}">Cadastre um lead</a> para salvar a simulação.</p>{% endif %}
+    {% endif %}
+    <button type="submit" class="btn light">{{ 'Salvar nova revisão' if quote else 'Salvar orçamento' }}</button>
+    <button type="button" class="btn" id="copy-whatsapp" aria-label="Copiar resumo para WhatsApp">Copiar para WhatsApp</button>
+  </aside>
+</form>
+{% if quote %}
+<form method="post" action="{{ url_for('crm.delete_quote', quote_id=quote.id) }}" onsubmit="return confirm('Apagar este orçamento e todas as suas revisões permanentemente?')" style="margin-top:12px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="btn btn-danger">Apagar orçamento</button>
+</form>
+{% endif %}
+</form>
+{% endblock %}

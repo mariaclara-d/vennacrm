@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Tarefas{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='tasks.js') }}"></script>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><p class="eyebrow">Gestão interna</p><h1>Tarefas</h1></div>
+  <button class="btn light" id="btn-nova-tarefa">+ Nova tarefa</button>
+</div>
+
+<div class="modal-overlay" id="modal-tarefa" hidden>
+  <div class="modal">
+    <h2>Nova tarefa</h2>
+    <form method="post" action="{{ url_for('crm.task_create') }}" class="stack" style="margin-top:14px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Título <input name="title" maxlength="200" required></label>
+      <label>Notas <textarea name="notes" maxlength="1000" rows="3"></textarea></label>
+      <label>Vincular a um lead (opcional)
+        <select name="lead_id">
+          <option value="">Sem vínculo</option>
+          {% for lead in leads %}<option value="{{ lead.id }}">{{ lead.name }}{% if lead.city %} · {{ lead.city }}{% endif %}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="actions">
+        <button type="submit" class="btn primary">Salvar tarefa</button>
+        <button type="button" class="btn" id="btn-cancelar">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="kanban-board">
+  {% set cols = [('todo','A fazer'), ('doing','Em andamento'), ('done','Concluído')] %}
+  {% for status_key, status_label in cols %}
+  <div class="kanban-col">
+    <div class="kanban-col-header">
+      <span class="kanban-col-title">{{ status_label }}</span>
+      <span class="kanban-col-count">{{ by_status[status_key]|length }}</span>
+    </div>
+    <div class="kanban-cards">
+      {% for task, lead_name, user_name in by_status[status_key] %}
+      <div class="kanban-card task-card">
+        <p class="kanban-card-name">{{ task.title }}</p>
+        {% if task.notes %}<p class="kanban-card-city">{{ task.notes }}</p>{% endif %}
+        {% if lead_name %}<p class="kanban-card-assignee">Lead: {{ lead_name }}</p>{% endif %}
+        <div class="task-actions">
+          {% if status_key != 'todo' %}
+          <form method="post" action="{{ url_for('crm.task_status', task_id=task.id) }}" class="task-move-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="{{ 'todo' if status_key == 'doing' else 'doing' }}">
+            <button type="submit" class="btn-task-move">← {{ 'A fazer' if status_key == 'doing' else 'Andamento' }}</button>
+          </form>
+          {% endif %}
+          {% if status_key != 'done' %}
+          <form method="post" action="{{ url_for('crm.task_status', task_id=task.id) }}" class="task-move-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="{{ 'doing' if status_key == 'todo' else 'done' }}">
+            <button type="submit" class="btn-task-move">{{ 'Andamento' if status_key == 'todo' else 'Concluído' }} →</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('crm.task_delete', task_id=task.id) }}" onsubmit="return confirm('Apagar tarefa?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-task-delete">×</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
