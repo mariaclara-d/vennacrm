@@ -20,6 +20,7 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(String(300))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     auth_version: Mapped[int] = mapped_column(Integer, default=1)
+    role: Mapped[str] = mapped_column(String(20), default="user")
     invitation_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
     invitation_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

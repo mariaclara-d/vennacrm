@@ -123,6 +123,13 @@ def init_db():
     """Cria as tabelas do CRM."""
     with current_app.extensions["venna_db"]() as db:
         Base.metadata.create_all(db.bind)
+        from sqlalchemy import text, inspect
+        inspector = inspect(db.bind)
+        if "users" in inspector.get_table_names():
+            cols = [c["name"] for c in inspector.get_columns("users")]
+            if "role" not in cols:
+                db.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'"))
+                db.commit()
     click.echo("Banco de dados inicializado.")
 
 

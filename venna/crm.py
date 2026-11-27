@@ -3,6 +3,12 @@ from datetime import datetime
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, send_file, url_for
 from sqlalchemy import func, or_, select, update
 
+import os
+import secrets
+from datetime import timedelta
+from urllib.parse import urlsplit
+
+from .auth import digest
 from .models import Activity, Lead, Quote, Revision, Task, User, utc_now
 from .pdf import quote_pdf
 from .quotes import InvalidForm, LOCAL_TZ, parse_date, parse_quote, quote_number, text_field
@@ -351,6 +357,44 @@ def task_delete(task_id):
     g.db.delete(task)
     g.db.commit()
     return redirect(url_for("crm.tasks"))
+
+
+def admin_required():
+    if not g.user or g.user.role != "admin":
+        abort(403)
+
+
+@crm.route("/equipe", methods=["GET", "POST"])
+def equipe():
+    admin_required()
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().casefold()[:254]
+        name = request.form.get("name", "").strip()[:100]
+        role = request.form.get("role", "user")
+        reset = request.form.get("reset") == "1"
+        import re
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email) or not name or role not in ("admin", "user"):
+            flash("Preencha nome, e-mail válido e perfil.", "error")
+        else:
+            base_url = os.getenv("VENNA_BASE_URL", "").rstrip("/")
+            token = secrets.token_urlsafe(32)
+            user = g.db.scalar(select(User).where(User.email == email))
+            if user and (not user.active or (user.password_hash and not reset)):
+                flash("Conta já existe e está ativa. Marque 'Reenviar convite' para redefinir o acesso.", "error")
+            else:
+                if not user:
+                    user = User(email=email, name=name, role=role)
+                    g.db.add(user)
+                else:
+                    user.name = name
+                    user.role = role
+                user.invitation_hash = digest(token)
+                user.invitation_expires = utc_now() + timedelta(hours=24)
+                g.db.commit()
+                link = f"{base_url}/ativar#convite={token}"
+                flash(f"Convite gerado para {name}: {link}", "success")
+    users = g.db.scalars(select(User).where(User.active).order_by(User.name)).all()
+    return render_template("equipe.html", users=users)
 
 
 @crm.get("/financeiro")

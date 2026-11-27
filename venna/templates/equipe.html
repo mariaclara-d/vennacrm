@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Equipe{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <p class="eyebrow">Administração</p><h1>Equipe</h1>
+
+  <form method="post" class="stack form-content" style="margin-bottom:2rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="fields">
+      <label>Nome <input name="name" maxlength="100" required placeholder="Nome completo"></label>
+      <label>E-mail <input name="email" type="email" maxlength="254" required placeholder="email@exemplo.com"></label>
+      <label>Perfil
+        <select name="role">
+          <option value="user">Usuária</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+    </div>
+    <label style="flex-direction:row;align-items:center;gap:.5rem;font-weight:normal">
+      <input type="checkbox" name="reset" value="1"> Reenviar convite para conta já existente
+    </label>
+    <div class="actions">
+      <button type="submit" class="btn primary">Gerar convite</button>
+    </div>
+  </form>
+
+  <h2 style="font-size:1rem;margin-bottom:.75rem">Usuárias ativas</h2>
+  <table class="data-table">
+    <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Senha</th></tr></thead>
+    <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.name }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ "Admin" if user.role == "admin" else "Usuária" }}</td>
+      <td>{{ "Definida" if user.password_hash else "Pendente" }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
