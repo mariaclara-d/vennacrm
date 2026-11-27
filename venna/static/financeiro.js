@@ -86,7 +86,9 @@ function recalc() {
   calcColHeader.textContent = currentMode === 'commission' ? 'Comissão' : '—';
 
   if (currentMode === 'commission' && commPct > 0) {
-    const commTotal = Math.round(netAccepted * commPct / (100 - commPct));
+    const grossAccepted = totals.accepted;
+    const cardDeductAccepted = Math.round(grossAccepted * fee / 100);
+    const commTotal = Math.round((grossAccepted - cardDeductAccepted) * commPct / 100);
     finResult.innerHTML = `<div class="fin-result-box"><strong>Comissão total (aceitos):</strong> ${fmt(commTotal)}</div>`;
   } else if (currentMode === 'split' && netAccepted > 0) {
     const names = [...document.querySelectorAll('.split-name')].slice(0, currentParts).map(i => i.value.trim() || `Pessoa ${[...document.querySelectorAll('.split-name')].indexOf(i) + 1}`);

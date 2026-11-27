@@ -29,7 +29,7 @@ def digest(value):
 
 def add_attempt(key, window):
     table = LoginAttempt.__table__
-    insert = postgres_insert if g.db.bind.dialect.name == "postgresql" else sqlite_insert
+    insert = postgres_insert if g.db.get_bind().dialect.name == "postgresql" else sqlite_insert
     command = insert(table).values(key=digest(key), window=window, attempts=1)
     return g.db.execute(command.on_conflict_do_update(
         index_elements=[table.c.key],
@@ -122,9 +122,9 @@ def logout():
 def init_db():
     """Cria as tabelas do CRM."""
     with current_app.extensions["venna_db"]() as db:
-        Base.metadata.create_all(db.bind)
+        Base.metadata.create_all(db.get_bind())
         from sqlalchemy import text, inspect
-        inspector = inspect(db.bind)
+        inspector = inspect(db.get_bind())
         if "users" in inspector.get_table_names():
             cols = [c["name"] for c in inspector.get_columns("users")]
             if "role" not in cols:

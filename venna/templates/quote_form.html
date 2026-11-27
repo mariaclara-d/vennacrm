@@ -62,8 +62,6 @@
         <label>Cidade/UF <input name="delivery_city" value="{{ posted.get('delivery_city', '') if posted else data.get('delivery_city', '') }}" maxlength="100" list="cidades-br" autocomplete="off"></label>
       </div>
     </section>
-      </div>
-    </section>
   </div>
   <aside class="panel summary">
     <p class="eyebrow">Sua estimativa</p><h2>Resumo da cotação</h2>
@@ -86,5 +84,4 @@
   <button type="submit" class="btn btn-danger">Apagar orçamento</button>
 </form>
 {% endif %}
-</form>
 {% endblock %}
